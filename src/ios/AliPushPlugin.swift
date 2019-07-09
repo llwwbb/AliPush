@@ -5,22 +5,20 @@ import CloudPushSDK
     static var notificationCache: [ [AnyHashable:Any]]?
     var callbackId:String?
     
-    public func _init(_ cmd: CDVInvokedUrlCommand){
+    @objc public func _init(_ cmd: CDVInvokedUrlCommand){
         if(AliPushPlugin.share == nil){
             AliPushPlugin.share = self;
         }
-        
+        print("llllllllllllllll222222222222222222222")
         // APNs注册，获取deviceToken并上报
         self.registerAPNs(UIApplication.shared);
-        // 初始化阿里云推送SDK
-        self.initCloudPushSDK();
         // 监听推送通道是否打开
         NotificationCenter.default.addObserver(self, selector: #selector(onMessageReceived(notification:)), name: NSNotification.Name("CCPDidReceiveMessageNotification"), object: nil)
         // 注册消息到来监听
         NotificationCenter.default.addObserver(self, selector: #selector(onChannelOpened(notification:)), name: NSNotification.Name("CCPDidChannelConnectedSuccess"), object: nil)
 
         callbackId = cmd.callbackId;
-        
+            
         if(AliPushPlugin.notificationCache != nil){
             for item in AliPushPlugin.notificationCache! {
                 let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: item);
@@ -34,7 +32,7 @@ import CloudPushSDK
         }
     }
     
-    static func fireNotificationEvent(object:[AnyHashable:Any]){
+    @objc static func fireNotificationEvent(object:[AnyHashable:Any]){
         if(share != nil){
             let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: object);
             result?.setKeepCallbackAs(true);
@@ -49,12 +47,14 @@ import CloudPushSDK
         notificationCache!.append(object);
     }
     
-    public func getDeviceId(_ cmd: CDVInvokedUrlCommand){
+    @objc public func getDeviceId(_ cmd: CDVInvokedUrlCommand){
         let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs:  CloudPushSDK.getDeviceId());
+        print("llllllllllllllll222222222222222222222\( CloudPushSDK.getDeviceId())")
+        
         self.commandDelegate.send(result, callbackId: cmd.callbackId);
     }
     
-    public func bindAccount(_ cmd: CDVInvokedUrlCommand){
+    @objc public func bindAccount(_ cmd: CDVInvokedUrlCommand){
         if(cmd.arguments.count < 1){
             let result = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "invalid arguments");
             self.commandDelegate.send(result, callbackId: cmd.callbackId);
@@ -73,7 +73,7 @@ import CloudPushSDK
         }
     }
     
-    public func unbindAccount(_ cmd: CDVInvokedUrlCommand){
+    @objc public func unbindAccount(_ cmd: CDVInvokedUrlCommand){
         CloudPushSDK.unbindAccount({res in
             if(res!.success){
                 let result = CDVPluginResult(status: CDVCommandStatus_OK);
@@ -86,7 +86,7 @@ import CloudPushSDK
         })
     }
     
-    public func listAlias(_ cmd: CDVInvokedUrlCommand){
+    @objc public func listAlias(_ cmd: CDVInvokedUrlCommand){
         CloudPushSDK.listAliases({res in
             if(res!.success){
                 print(res!.data as! String);//逗号分隔的字符串拼接   aa,bb,cc
@@ -100,7 +100,7 @@ import CloudPushSDK
         })
     }
     
-    public func addAlias(_ cmd: CDVInvokedUrlCommand){
+    @objc public func addAlias(_ cmd: CDVInvokedUrlCommand){
         if(cmd.arguments.count < 1){
             let result = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "invalid arguments");
             self.commandDelegate.send(result, callbackId: cmd.callbackId);
@@ -119,7 +119,7 @@ import CloudPushSDK
         }
     }
     
-    public func removeAlias(_ cmd: CDVInvokedUrlCommand){
+    @objc public func removeAlias(_ cmd: CDVInvokedUrlCommand){
         CloudPushSDK.removeAlias(cmd.argument(at: 0) as? String, withCallback: {res in
             let result:CDVPluginResult;
             if(res!.success){
@@ -132,7 +132,7 @@ import CloudPushSDK
         })
     }
     
-    public func listTags(_ cmd: CDVInvokedUrlCommand){
+    @objc public func listTags(_ cmd: CDVInvokedUrlCommand){
         CloudPushSDK.listTags(1, withCallback: {res in
             let result:CDVPluginResult;
             if(res!.success){
@@ -146,7 +146,7 @@ import CloudPushSDK
         })
     }
     
-    public func bindTag(_ cmd: CDVInvokedUrlCommand){
+    @objc public func bindTag(_ cmd: CDVInvokedUrlCommand){
         if(cmd.arguments.count < 2){
             let result = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "invalid arguments");
             self.commandDelegate.send(result, callbackId: cmd.callbackId);
@@ -166,7 +166,7 @@ import CloudPushSDK
         })
     }
     
-    public func unbindTag(_ cmd: CDVInvokedUrlCommand){
+    @objc public func unbindTag(_ cmd: CDVInvokedUrlCommand){
         if(cmd.arguments.count < 2){
             let result = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "invalid arguments");
             self.commandDelegate.send(result, callbackId: cmd.callbackId);
@@ -186,13 +186,13 @@ import CloudPushSDK
         })
     }
     
-    public func setBadge(_ cmd: CDVInvokedUrlCommand){
+    @objc public func setBadge(_ cmd: CDVInvokedUrlCommand){
         // 设置角标数
         UIApplication.shared.applicationIconBadgeNumber = cmd.argument(at: 0) as! Int
         self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_OK), callbackId: cmd.callbackId);
     }
     
-    public func syncBadge(_ cmd: CDVInvokedUrlCommand){
+    @objc public func syncBadge(_ cmd: CDVInvokedUrlCommand){
         // 同步角标数到服务端
         CloudPushSDK.syncBadgeNum(cmd.argument(at: 0) as! UInt , withCallback: {res in
             let result:CDVPluginResult;
@@ -208,7 +208,7 @@ import CloudPushSDK
     
     
     // 处理推送消息
-    func onMessageReceived(notification:Notification){
+    @objc func onMessageReceived(notification:Notification){
         let pushMessage: CCPSysMessage = notification.object as! CCPSysMessage
         let title = String.init(data: pushMessage.title, encoding: String.Encoding.utf8)
         let body = String.init(data: pushMessage.body, encoding: String.Encoding.utf8)
@@ -216,7 +216,7 @@ import CloudPushSDK
         AliPushPlugin.fireNotificationEvent(object: ["eventType":"receiveMessage", "title":title, "body":body]);
     }
     
-    func onChannelOpened(notification:Notification){
+    @objc func onChannelOpened(notification:Notification){
         print("connect successful");
     }
     
@@ -252,24 +252,7 @@ import CloudPushSDK
         }
     }
     
-    // 初始化推送SDK
-    func initCloudPushSDK() {
-        // 打开Log，线上建议关闭
-//        CloudPushSDK.turnOnDebug()
-        let appkey = commandDelegate.settings["alipush_app_key"] as! String;
-        let appSecret = commandDelegate.settings["alipush_app_secret"] as! String;
-        CloudPushSDK.asyncInit(appkey, appSecret: appSecret, callback: {res in
-            if(res!.success){
-//                let result = CDVPluginResult(status: CDVCommandStatus_OK);
-//                self.commandDelegate.send(result, callbackId: cmd.callbackId);
-            }else{
-//                print(res?.error);
-//                let result = CDVPluginResult(status: CDVCommandStatus_ERROR);
-//                self.commandDelegate.send(result, callbackId: cmd.callbackId)
-            }
-        })
-    }
-    
+  
     // 触发通知动作时回调，比如点击、删除通知和点击自定义action(iOS 10+)
     @available(iOS 10, *)
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
